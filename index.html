@@ -22,62 +22,91 @@
         }
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
         .header h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 4px;
+        }
+        /* Перемикач ролей (Замовник / Виконавець) */
+        .role-switch {
+            display: flex;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+        .role-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .role-btn.active {
+            background: #0284c7;
+            color: white;
         }
         .card {
             background: #1e293b;
             border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         .balance-title {
-            font-size: 14px;
+            font-size: 13px;
             color: #94a3b8;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .balance-amount {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
         }
         .btn {
+            flex: 1;
             background-color: #0284c7;
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px 20px;
-            font-size: 16px;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
             font-weight: 600;
-            width: 100%;
             cursor: pointer;
-            transition: background 0.2s;
+            text-align: center;
         }
-        .btn:active {
-            background-color: #0369a1;
+        .btn-green {
+            background-color: #22c55e;
+        }
+        .btn-secondary {
+            background-color: #334155;
         }
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 16px;
         }
         .tab {
             flex: 1;
             background: #1e293b;
             border: none;
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 8px;
             color: #94a3b8;
             font-weight: 600;
             cursor: pointer;
+            font-size: 13px;
         }
         .tab.active {
             background: #0284c7;
@@ -89,31 +118,32 @@
         .section.active {
             display: block;
         }
-        .task-item {
+        .item-list {
             background: #1e293b;
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .task-info h4 {
+        .item-info h4 {
             font-size: 14px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
-        .task-info p {
+        .item-info p {
             font-size: 12px;
             color: #38bdf8;
         }
-        .task-btn {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 6px 12px;
+        input, select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
             border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
+            padding: 10px;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -121,48 +151,85 @@
 
     <div class="header">
         <h1>SubEarn 🚀</h1>
-        <p style="font-size: 12px; color: #94a3b8;">Заробіток на мікрозавданнях</p>
     </div>
 
-    <!-- Навігація -->
+    <!-- Перемикач Режимів -->
+    <div class="role-switch">
+        <button class="role-btn active" id="btn-executor" onclick="switchRole('executor')">Виконавець</button>
+        <button class="role-btn" id="btn-customer" onclick="switchRole('customer')">Замовник</button>
+    </div>
+
+    <!-- Навігація всередині режимів -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('main')">Головна</button>
-        <button class="tab" onclick="switchTab('tasks')">Завдання</button>
-        <button class="tab" onclick="switchTab('profile')">Профіль</button>
+        <button class="tab active" onclick="switchTab('main')" id="tab-main">Головна</button>
+        <button class="tab" onclick="switchTab('tasks')" id="tab-tasks">Завдання</button>
+        <button class="tab" onclick="switchTab('profile')" id="tab-profile">Профіль</button>
     </div>
 
-    <!-- Головна вкладка (Баланс та поповнення) -->
-    <div id="main" class="section active">
-        <div class="card">
-            <div class="balance-title">Ваш баланс</div>
-            <div class="balance-amount" id="user-balance">0.00 ₴</div>
-            <button class="btn" onclick="createInvoice()">Поповнити 100 ₴ (CryptoBot)</button>
-        </div>
-    </div>
-
-    <!-- Вкладка завдань -->
-    <div id="tasks" class="section">
-        <div class="task-item">
-            <div class="task-info">
-                <h4>Підписатися на канал</h4>
-                <p>Нагорода: +5.00 ₴</p>
+    <!-- РЕЖИМ ВИКОНАВЦЯ -->
+    <div id="mode-executor" class="role-section">
+        <!-- Головна Виконавця -->
+        <div id="sec-main" class="section active">
+            <div class="card">
+                <div class="balance-title">Баланс виконавця</div>
+                <div class="balance-amount" id="executor-balance">0.00 ₴</div>
+                <div class="btn-group">
+                    <button class="btn btn-green" onclick="openDepositModal()">Поповнити</button>
+                    <button class="btn btn-secondary" onclick="openWithdrawModal()">Вивести</button>
+                </div>
             </div>
-            <button class="task-btn" onclick="completeTask(5)">Виконати</button>
         </div>
-        <div class="task-item">
-            <div class="task-info">
-                <h4>Переглянути пост</h4>
-                <p>Нагорода: +2.50 ₴</p>
+
+        <!-- Завдання (робота) -->
+        <div id="sec-tasks" class="section">
+            <div class="item-list">
+                <div class="item-info">
+                    <h4>Підписка на Telegram канал</h4>
+                    <p>Нагорода: +5.00 ₴</p>
+                </div>
+                <button class="btn" style="padding: 6px 12px; width: auto;" onclick="completeTask(5)">Виконати</button>
             </div>
-            <button class="task-btn" onclick="completeTask(2.5)">Виконати</button>
+            <div class="item-list">
+                <div class="item-info">
+                    <h4>Перегляд публікації</h4>
+                    <p>Нагорода: +2.50 ₴</p>
+                </div>
+                <button class="btn" style="padding: 6px 12px; width: auto;" onclick="completeTask(2.5)">Виконати</button>
+            </div>
+        </div>
+
+        <!-- Профіль Виконавця -->
+        <div id="sec-profile" class="section">
+            <div class="card">
+                <p><strong>Акаунт (Telegram ID):</strong> <span id="tg-user-id">З'єднання...</span></p>
+                <p style="margin-top: 8px;"><strong>Статус:</strong> <span style="color: #22c55e;">Авторизовано ✅</span></p>
+            </div>
         </div>
     </div>
 
-    <!-- Вкладка профілю -->
-    <div id="profile" class="section">
-        <div class="card" style="text-align: left;">
-            <p><strong>Telegram ID:</strong> <span id="tg-id">визначається...</span></p>
-            <p style="margin-top: 8px;"><strong>Статус:</strong> <span style="color: #22c55e;">Активний</span></p>
+    <!-- РЕЖИМ ЗАМОВНИКА -->
+    <div id="mode-customer" class="role-section" style="display: none;">
+        <div id="sec-main-c" class="section active">
+            <div class="card">
+                <div class="balance-title">Бюджет для реклами</div>
+                <div class="balance-amount" id="customer-balance">0.00 ₴</div>
+                <button class="btn btn-green" onclick="openDepositModal()">Поповнити бюджет</button>
+            </div>
+            <div class="card">
+                <h3 style="font-size: 15px; margin-bottom: 10px;">Створити нове завдання</h3>
+                <input type="text" id="task-title" placeholder="Опис завдання (напр. Підписка)">
+                <input type="number" id="task-reward" placeholder="Нагорода за 1 виконання (₴)">
+                <button class="btn" onclick="createTask()">Створити кампанію</button>
+            </div>
+        </div>
+        <div id="sec-tasks-c" class="section">
+            <div class="card"><p style="color: #94a3b8; text-align: center;">Ваших активних кампаній немає</p></div>
+        </div>
+        <div id="sec-profile-c" class="section">
+            <div class="card">
+                <p><strong>Кабінет замовника</strong></p>
+                <p style="margin-top: 6px; color: #94a3b8; font-size: 13px;">Керування рекламними кампаніями та бюджетами.</p>
+            </div>
         </div>
     </div>
 
@@ -170,44 +237,96 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let balance = 0.00;
-        const userId = tg.initDataUnsafe?.user?.id || '123456789';
-        document.getElementById('tg-id').innerText = userId;
+        let state = {
+            balance: 0.00,
+            userId: tg.initDataUnsafe?.user?.id || 'demo_user_' + Math.floor(Math.random() * 1000)
+        };
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('tg-user-id').innerText = state.userId;
+
+        function switchRole(role) {
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            if(role === 'executor') {
+                document.getElementById('btn-executor').classList.add('active');
+                document.getElementById('mode-executor').style.display = 'block';
+                document.getElementById('mode-customer').style.display = 'none';
+            } else {
+                document.getElementById('btn-customer').classList.add('active');
+                document.getElementById('mode-executor').style.display = 'none';
+                document.getElementById('mode-customer').style.display = 'block';
+            }
+            switchTab('main');
+        }
+
+        function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
+
+            const isCustomer = document.getElementById('mode-customer').style.display === 'block';
+            
+            document.querySelectorAll(isCustomer ? '#mode-customer .section' : '#mode-executor .section').forEach(s => s.classList.remove('active'));
+            
+            if(tabName === 'main') {
+                document.getElementById(isCustomer ? 'sec-main-c' : 'sec-main').classList.add('active');
+            } else if(tabName === 'tasks') {
+                document.getElementById(isCustomer ? 'sec-tasks-c' : 'sec-tasks').classList.add('active');
+            } else if(tabName === 'profile') {
+                document.getElementById(isCustomer ? 'sec-profile-c' : 'sec-profile').classList.add('active');
+            }
         }
 
         function completeTask(reward) {
-            balance += reward;
-            document.getElementById('user-balance').innerText = balance.toFixed(2) + ' ₴';
-            tg.showAlert(`Ви успішно виконали завдання! Отримано +${reward} ₴`);
+            state.balance += reward;
+            updateBalanceUI();
+            tg.showAlert(`Завдання виконано! Нараховано +${reward} ₴`);
         }
 
-        async function createInvoice() {
+        function updateBalanceUI() {
+            document.getElementById('executor-balance').innerText = state.balance.toFixed(2) + ' ₴';
+            document.getElementById('customer-balance').innerText = state.balance.toFixed(2) + ' ₴';
+        }
+
+        async function openDepositModal() {
             try {
-                tg.MainButton.showProgress();
                 const response = await fetch('/api/create-invoice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId: userId, amountUAH: 100, asset: 'USDT' })
+                    body: JSON.stringify({ telegramId: state.userId, amountUAH: 100, asset: 'USDT' })
                 });
                 const data = await response.json();
-                tg.MainButton.hideProgress();
-
                 if (data.success && data.invoiceUrl) {
-                    tg.openInvoice(data.invoiceUrl); // або відкриваємо через посилання
                     window.location.href = data.invoiceUrl;
                 } else {
-                    alert('Помилка створення інвойсу: ' + (data.error || 'невідома помилка'));
+                    alert('Помилка створення інвойсу CryptoBot');
                 }
             } catch (e) {
-                tg.MainButton.hideProgress();
-                alert('Помилка з\'єднання з бекендом');
+                alert('Помилка з\'єднання з сервером');
             }
+        }
+
+        function openWithdrawModal() {
+            let amount = prompt('Введіть суму для виведення (₴):', '50');
+            if(amount && !isNaN(amount)) {
+                if(parseFloat(amount) > state.balance) {
+                    alert('Недостатньо коштів на балансі!');
+                } else {
+                    state.balance -= parseFloat(amount);
+                    updateBalanceUI();
+                    tg.showAlert(`Заявку на виведення ${amount} ₴ успішно створено!`);
+                }
+            }
+        }
+
+        function createTask() {
+            let title = document.getElementById('task-title').value;
+            let reward = document.getElementById('task-reward').value;
+            if(!title || !reward) {
+                alert('Заповніть усі поля кампанії!');
+                return;
+            }
+            tg.showAlert('Рекламну кампанію успішно створено!');
+            document.getElementById('task-title').value = '';
+            document.getElementById('task-reward').value = '';
         }
     </script>
 </body>

@@ -29,7 +29,6 @@
             font-weight: 700;
             color: #38bdf8;
         }
-        /* Перемикач ролей (Замовник / Виконавець) */
         .role-switch {
             display: flex;
             background: #1e293b;
@@ -159,7 +158,7 @@
         <button class="role-btn" id="btn-customer" onclick="switchRole('customer')">Замовник</button>
     </div>
 
-    <!-- Навігація всередині режимів -->
+    <!-- Навігація -->
     <div class="tabs">
         <button class="tab active" onclick="switchTab('main')" id="tab-main">Головна</button>
         <button class="tab" onclick="switchTab('tasks')" id="tab-tasks">Завдання</button>
@@ -168,7 +167,6 @@
 
     <!-- РЕЖИМ ВИКОНАВЦЯ -->
     <div id="mode-executor" class="role-section">
-        <!-- Головна Виконавця -->
         <div id="sec-main" class="section active">
             <div class="card">
                 <div class="balance-title">Баланс виконавця</div>
@@ -179,8 +177,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Завдання (робота) -->
         <div id="sec-tasks" class="section">
             <div class="item-list">
                 <div class="item-info">
@@ -189,20 +185,12 @@
                 </div>
                 <button class="btn" style="padding: 6px 12px; width: auto;" onclick="completeTask(5)">Виконати</button>
             </div>
-            <div class="item-list">
-                <div class="item-info">
-                    <h4>Перегляд публікації</h4>
-                    <p>Нагорода: +2.50 ₴</p>
-                </div>
-                <button class="btn" style="padding: 6px 12px; width: auto;" onclick="completeTask(2.5)">Виконати</button>
-            </div>
         </div>
-
-        <!-- Профіль Виконавця -->
         <div id="sec-profile" class="section">
             <div class="card">
-                <p><strong>Акаунт (Telegram ID):</strong> <span id="tg-user-id">З'єднання...</span></p>
-                <p style="margin-top: 8px;"><strong>Статус:</strong> <span style="color: #22c55e;">Авторизовано ✅</span></p>
+                <p><strong>Ім'я:</strong> <span id="user-name">Завантаження...</span></p>
+                <p style="margin-top: 6px;"><strong>Telegram ID:</strong> <span id="tg-user-id">...</span></p>
+                <p style="margin-top: 6px;"><strong>Статус:</strong> <span style="color: #22c55e;">Успішний вхід ✅</span></p>
             </div>
         </div>
     </div>
@@ -216,19 +204,19 @@
                 <button class="btn btn-green" onclick="openDepositModal()">Поповнити бюджет</button>
             </div>
             <div class="card">
-                <h3 style="font-size: 15px; margin-bottom: 10px;">Створити нове завдання</h3>
-                <input type="text" id="task-title" placeholder="Опис завдання (напр. Підписка)">
+                <h3 style="font-size: 15px; margin-bottom: 10px;">Створити кампанію</h3>
+                <input type="text" id="task-title" placeholder="Опис завдання">
                 <input type="number" id="task-reward" placeholder="Нагорода за 1 виконання (₴)">
-                <button class="btn" onclick="createTask()">Створити кампанію</button>
+                <button class="btn" onclick="createTask()">Створити</button>
             </div>
         </div>
         <div id="sec-tasks-c" class="section">
-            <div class="card"><p style="color: #94a3b8; text-align: center;">Ваших активних кампаній немає</p></div>
+            <div class="card"><p style="color: #94a3b8; text-align: center;">Немає активних кампаній</p></div>
         </div>
         <div id="sec-profile-c" class="section">
             <div class="card">
                 <p><strong>Кабінет замовника</strong></p>
-                <p style="margin-top: 6px; color: #94a3b8; font-size: 13px;">Керування рекламними кампаніями та бюджетами.</p>
+                <p style="margin-top: 6px; color: #94a3b8; font-size: 13px;">Управління рекламою.</p>
             </div>
         </div>
     </div>
@@ -237,12 +225,48 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let state = {
-            balance: 0.00,
-            userId: tg.initDataUnsafe?.user?.id || 'demo_user_' + Math.floor(Math.random() * 1000)
+        // Отримуємо дані користувача з Telegram або створюємо демо для тесту в браузері
+        const tgUser = tg.initDataUnsafe?.user || {
+            id: 'demo_' + Math.floor(Math.random() * 100000),
+            first_name: 'Тестовий Користувач',
+            username: 'test_user'
         };
 
-        document.getElementById('tg-user-id').innerText = state.userId;
+        let currentUser = {
+            telegramId: tgUser.id,
+            firstName: tgUser.first_name,
+            username: tgUser.username,
+            balance: 0.00
+        };
+
+        // Запит на сервер для авторизації / реєстрації
+        async function initAuth() {
+            try {
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: currentUser.telegramId,
+                        firstName: currentUser.firstName,
+                        username: currentUser.username
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    currentUser.balance = data.user.balance;
+                    updateUI();
+                }
+            } catch (e) {
+                console.error('Помилка авторизації:', e);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('tg-user-id').innerText = currentUser.telegramId;
+            document.getElementById('user-name').innerText = currentUser.firstName;
+            document.getElementById('executor-balance').innerText = currentUser.balance.toFixed(2) + ' ₴';
+            document.getElementById('customer-balance').innerText = currentUser.balance.toFixed(2) + ' ₴';
+        }
 
         function switchRole(role) {
             document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
@@ -263,7 +287,6 @@
             event.target.classList.add('active');
 
             const isCustomer = document.getElementById('mode-customer').style.display === 'block';
-            
             document.querySelectorAll(isCustomer ? '#mode-customer .section' : '#mode-executor .section').forEach(s => s.classList.remove('active'));
             
             if(tabName === 'main') {
@@ -276,14 +299,9 @@
         }
 
         function completeTask(reward) {
-            state.balance += reward;
-            updateBalanceUI();
+            currentUser.balance += reward;
+            updateUI();
             tg.showAlert(`Завдання виконано! Нараховано +${reward} ₴`);
-        }
-
-        function updateBalanceUI() {
-            document.getElementById('executor-balance').innerText = state.balance.toFixed(2) + ' ₴';
-            document.getElementById('customer-balance').innerText = state.balance.toFixed(2) + ' ₴';
         }
 
         async function openDepositModal() {
@@ -291,7 +309,7 @@
                 const response = await fetch('/api/create-invoice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId: state.userId, amountUAH: 100, asset: 'USDT' })
+                    body: JSON.stringify({ telegramId: currentUser.telegramId, amountUAH: 100, asset: 'USDT' })
                 });
                 const data = await response.json();
                 if (data.success && data.invoiceUrl) {
@@ -307,12 +325,12 @@
         function openWithdrawModal() {
             let amount = prompt('Введіть суму для виведення (₴):', '50');
             if(amount && !isNaN(amount)) {
-                if(parseFloat(amount) > state.balance) {
-                    alert('Недостатньо коштів на балансі!');
+                if(parseFloat(amount) > currentUser.balance) {
+                    alert('Недостатньо коштів!');
                 } else {
-                    state.balance -= parseFloat(amount);
-                    updateBalanceUI();
-                    tg.showAlert(`Заявку на виведення ${amount} ₴ успішно створено!`);
+                    currentUser.balance -= parseFloat(amount);
+                    updateUI();
+                    tg.showAlert(`Заявку на виведення ${amount} ₴ створено!`);
                 }
             }
         }
@@ -321,13 +339,16 @@
             let title = document.getElementById('task-title').value;
             let reward = document.getElementById('task-reward').value;
             if(!title || !reward) {
-                alert('Заповніть усі поля кампанії!');
+                alert('Заповніть усі поля!');
                 return;
             }
-            tg.showAlert('Рекламну кампанію успішно створено!');
+            tg.showAlert('Кампанію успішно створено!');
             document.getElementById('task-title').value = '';
             document.getElementById('task-reward').value = '';
         }
+
+        // Запуск ініціалізації при завантаженні
+        initAuth();
     </script>
 </body>
 </html>

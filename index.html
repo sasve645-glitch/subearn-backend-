@@ -3,108 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubEarn Mini App</title>
+    <title>SubEarn 🚀</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--tg-theme-bg-color, #0f172a);
-            color: var(--tg-theme-text-color, #ffffff);
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            box-sizing: border-box;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 4px;
         }
         .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
+            background: #1e293b;
             border-radius: 16px;
-            width: 100%;
-            max-width: 350px;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        h1 { margin-top: 0; font-size: 24px; }
-        .balance { font-size: 28px; font-weight: bold; color: #38bdf8; margin: 15px 0; }
-        button {
-            background-color: var(--tg-theme-button-color, #3b82f6);
-            color: var(--tg-theme-button-text-color, #ffffff);
+        .balance-title {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 16px;
+        }
+        .btn {
+            background-color: #0284c7;
+            color: white;
             border: none;
             border-radius: 12px;
             padding: 12px 20px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             width: 100%;
             cursor: pointer;
-            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn:active {
+            background-color: #0369a1;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            background: #1e293b;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab.active {
+            background: #0284c7;
+            color: white;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .task-item {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-info h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .task-info p {
+            font-size: 12px;
+            color: #38bdf8;
+        }
+        .task-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
+    <div class="header">
         <h1>SubEarn 🚀</h1>
-        <p>Ваш баланс:</p>
-        <div class="balance"><span id="balance">0.00</span> ₴</div>
-        
-        <button onclick="topUp(100)">Поповнити 100 ₴ (CryptoBot)</button>
+        <p style="font-size: 12px; color: #94a3b8;">Заробіток на мікрозавданнях</p>
+    </div>
+
+    <!-- Навігація -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('main')">Головна</button>
+        <button class="tab" onclick="switchTab('tasks')">Завдання</button>
+        <button class="tab" onclick="switchTab('profile')">Профіль</button>
+    </div>
+
+    <!-- Головна вкладка (Баланс та поповнення) -->
+    <div id="main" class="section active">
+        <div class="card">
+            <div class="balance-title">Ваш баланс</div>
+            <div class="balance-amount" id="user-balance">0.00 ₴</div>
+            <button class="btn" onclick="createInvoice()">Поповнити 100 ₴ (CryptoBot)</button>
+        </div>
+    </div>
+
+    <!-- Вкладка завдань -->
+    <div id="tasks" class="section">
+        <div class="task-item">
+            <div class="task-info">
+                <h4>Підписатися на канал</h4>
+                <p>Нагорода: +5.00 ₴</p>
+            </div>
+            <button class="task-btn" onclick="completeTask(5)">Виконати</button>
+        </div>
+        <div class="task-item">
+            <div class="task-info">
+                <h4>Переглянути пост</h4>
+                <p>Нагорода: +2.50 ₴</p>
+            </div>
+            <button class="task-btn" onclick="completeTask(2.5)">Виконати</button>
+        </div>
+    </div>
+
+    <!-- Вкладка профілю -->
+    <div id="profile" class="section">
+        <div class="card" style="text-align: left;">
+            <p><strong>Telegram ID:</strong> <span id="tg-id">визначається...</span></p>
+            <p style="margin-top: 8px;"><strong>Статус:</strong> <span style="color: #22c55e;">Активний</span></p>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Отримуємо реальний Telegram ID користувача
-        const user = tg.initDataUnsafe?.user;
-        const telegramId = user ? user.id : 'test_user_123';
+        let balance = 0.00;
+        const userId = tg.initDataUnsafe?.user?.id || '123456789';
+        document.getElementById('tg-id').innerText = userId;
 
-        // Посилання на ваш бекенд на Render
-        const BACKEND_URL = 'https://subearn-backend.onrender.com';
-
-        async function fetchBalance() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/user/${telegramId}`);
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('balance').innerText = data.balance.toFixed(2);
-                }
-            } catch (e) {
-                console.error('Помилка завантаження балансу', e);
-            }
+        function switchTab(tabId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
         }
 
-        async function topUp(amountUAH) {
+        function completeTask(reward) {
+            balance += reward;
+            document.getElementById('user-balance').innerText = balance.toFixed(2) + ' ₴';
+            tg.showAlert(`Ви успішно виконали завдання! Отримано +${reward} ₴`);
+        }
+
+        async function createInvoice() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/create-invoice`, {
+                tg.MainButton.showProgress();
+                const response = await fetch('/api/create-invoice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId, amountUAH, asset: 'USDT' })
+                    body: JSON.stringify({ telegramId: userId, amountUAH: 100, asset: 'USDT' })
                 });
-                const data = await res.json();
+                const data = await response.json();
+                tg.MainButton.hideProgress();
 
-                if (data.success) {
-                    // Відкриваємо інвойс у Telegram через офіційне API
-                    tg.openInvoice(data.bot_invoice_url, async (status) => {
-                        if (status === 'paid') {
-                            alert('Оплата успішна!');
-                            fetchBalance();
-                        }
-                    });
+                if (data.success && data.invoiceUrl) {
+                    tg.openInvoice(data.invoiceUrl); // або відкриваємо через посилання
+                    window.location.href = data.invoiceUrl;
                 } else {
-                    alert('Помилка: ' + data.error);
+                    alert('Помилка створення інвойсу: ' + (data.error || 'невідома помилка'));
                 }
             } catch (e) {
-                alert('Помилка зʼєднання з сервером');
+                tg.MainButton.hideProgress();
+                alert('Помилка з\'єднання з бекендом');
             }
         }
-
-        fetchBalance();
-        // Оновлюємо баланс кожні 5 секунд
-        setInterval(fetchBalance, 5000);
     </script>
 </body>
 </html>

@@ -5,6 +5,12 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors());
+const path = require('path');
+
+// Обробник головної сторінки
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Токен береться зі змінних середовища Render.com
 const CRYPTO_BOT_TOKEN = process.env.CRYPTO_BOT_TOKEN;

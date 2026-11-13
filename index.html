@@ -144,6 +144,13 @@
             margin-bottom: 10px;
             font-size: 14px;
         }
+        label {
+            font-size: 12px;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 4px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -171,184 +178,8 @@
             <div class="card">
                 <div class="balance-title">Баланс виконавця</div>
                 <div class="balance-amount" id="executor-balance">0.00 ₴</div>
-                <div class="btn-group">
-                    <button class="btn btn-green" onclick="openDepositModal()">Поповнити</button>
-                    <button class="btn btn-secondary" onclick="openWithdrawModal()">Вивести</button>
-                </div>
-            </div>
-        </div>
-        <div id="sec-tasks" class="section">
-            <div class="item-list">
-                <div class="item-info">
-                    <h4>Підписка на Telegram канал</h4>
-                    <p>Нагорода: +5.00 ₴</p>
-                </div>
-                <button class="btn" style="padding: 6px 12px; width: auto;" onclick="completeTask(5)">Виконати</button>
-            </div>
-        </div>
-        <div id="sec-profile" class="section">
-            <div class="card">
-                <p><strong>Ім'я:</strong> <span id="user-name">Завантаження...</span></p>
-                <p style="margin-top: 6px;"><strong>Telegram ID:</strong> <span id="tg-user-id">...</span></p>
-                <p style="margin-top: 6px;"><strong>Статус:</strong> <span style="color: #22c55e;">Успішний вхід ✅</span></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- РЕЖИМ ЗАМОВНИКА -->
-    <div id="mode-customer" class="role-section" style="display: none;">
-        <div id="sec-main-c" class="section active">
-            <div class="card">
-                <div class="balance-title">Бюджет для реклами</div>
-                <div class="balance-amount" id="customer-balance">0.00 ₴</div>
-                <button class="btn btn-green" onclick="openDepositModal()">Поповнити бюджет</button>
-            </div>
-            <div class="card">
-                <h3 style="font-size: 15px; margin-bottom: 10px;">Створити кампанію</h3>
-                <input type="text" id="task-title" placeholder="Опис завдання">
-                <input type="number" id="task-reward" placeholder="Нагорода за 1 виконання (₴)">
-                <button class="btn" onclick="createTask()">Створити</button>
-            </div>
-        </div>
-        <div id="sec-tasks-c" class="section">
-            <div class="card"><p style="color: #94a3b8; text-align: center;">Немає активних кампаній</p></div>
-        </div>
-        <div id="sec-profile-c" class="section">
-            <div class="card">
-                <p><strong>Кабінет замовника</strong></p>
-                <p style="margin-top: 6px; color: #94a3b8; font-size: 13px;">Управління рекламою.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Отримуємо дані користувача з Telegram або створюємо демо для тесту в браузері
-        const tgUser = tg.initDataUnsafe?.user || {
-            id: 'demo_' + Math.floor(Math.random() * 100000),
-            first_name: 'Тестовий Користувач',
-            username: 'test_user'
-        };
-
-        let currentUser = {
-            telegramId: tgUser.id,
-            firstName: tgUser.first_name,
-            username: tgUser.username,
-            balance: 0.00
-        };
-
-        // Запит на сервер для авторизації / реєстрації
-        async function initAuth() {
-            try {
-                const response = await fetch('/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        telegramId: currentUser.telegramId,
-                        firstName: currentUser.firstName,
-                        username: currentUser.username
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    currentUser.balance = data.user.balance;
-                    updateUI();
-                }
-            } catch (e) {
-                console.error('Помилка авторизації:', e);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('tg-user-id').innerText = currentUser.telegramId;
-            document.getElementById('user-name').innerText = currentUser.firstName;
-            document.getElementById('executor-balance').innerText = currentUser.balance.toFixed(2) + ' ₴';
-            document.getElementById('customer-balance').innerText = currentUser.balance.toFixed(2) + ' ₴';
-        }
-
-        function switchRole(role) {
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-            if(role === 'executor') {
-                document.getElementById('btn-executor').classList.add('active');
-                document.getElementById('mode-executor').style.display = 'block';
-                document.getElementById('mode-customer').style.display = 'none';
-            } else {
-                document.getElementById('btn-customer').classList.add('active');
-                document.getElementById('mode-executor').style.display = 'none';
-                document.getElementById('mode-customer').style.display = 'block';
-            }
-            switchTab('main');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-
-            const isCustomer = document.getElementById('mode-customer').style.display === 'block';
-            document.querySelectorAll(isCustomer ? '#mode-customer .section' : '#mode-executor .section').forEach(s => s.classList.remove('active'));
-            
-            if(tabName === 'main') {
-                document.getElementById(isCustomer ? 'sec-main-c' : 'sec-main').classList.add('active');
-            } else if(tabName === 'tasks') {
-                document.getElementById(isCustomer ? 'sec-tasks-c' : 'sec-tasks').classList.add('active');
-            } else if(tabName === 'profile') {
-                document.getElementById(isCustomer ? 'sec-profile-c' : 'sec-profile').classList.add('active');
-            }
-        }
-
-        function completeTask(reward) {
-            currentUser.balance += reward;
-            updateUI();
-            tg.showAlert(`Завдання виконано! Нараховано +${reward} ₴`);
-        }
-
-        async function openDepositModal() {
-            try {
-                const response = await fetch('/api/create-invoice', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegramId: currentUser.telegramId, amountUAH: 100, asset: 'USDT' })
-                });
-                const data = await response.json();
-                if (data.success && data.invoiceUrl) {
-                    window.location.href = data.invoiceUrl;
-                } else {
-                    alert('Помилка створення інвойсу CryptoBot');
-                }
-            } catch (e) {
-                alert('Помилка з\'єднання з сервером');
-            }
-        }
-
-        function openWithdrawModal() {
-            let amount = prompt('Введіть суму для виведення (₴):', '50');
-            if(amount && !isNaN(amount)) {
-                if(parseFloat(amount) > currentUser.balance) {
-                    alert('Недостатньо коштів!');
-                } else {
-                    currentUser.balance -= parseFloat(amount);
-                    updateUI();
-                    tg.showAlert(`Заявку на виведення ${amount} ₴ створено!`);
-                }
-            }
-        }
-
-        function createTask() {
-            let title = document.getElementById('task-title').value;
-            let reward = document.getElementById('task-reward').value;
-            if(!title || !reward) {
-                alert('Заповніть усі поля!');
-                return;
-            }
-            tg.showAlert('Кампанію успішно створено!');
-            document.getElementById('task-title').value = '';
-            document.getElementById('task-reward').value = '';
-        }
-
-        // Запуск ініціалізації при завантаженні
-        initAuth();
-    </script>
-</body>
-</html>
+                
+                <!-- Поле для введення суми поповнення -->
+                <div style="margin-bottom: 12px;">
+                    <label>Сума поповнення (₴):</label>
+                    <input type="number" id="deposit-
